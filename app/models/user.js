@@ -11,6 +11,7 @@ var User = db.Model.extend({
     username: null,
     password: null
   }
+  
 });
 
 module.exports = User;

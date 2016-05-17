@@ -90,7 +90,7 @@ function(req, res) {
 /************************************************************/
 
 app.get('/login', function (req, res) {
-  res.status(200).render('login').send();
+  res.status(200).render('login');
 });
 
 app.post('/login', function (req, res) {
@@ -108,7 +108,7 @@ app.post('/login', function (req, res) {
 });
 
 app.get('/signup', function (req, res) {
-  res.render('index'); 
+  res.render('signup'); 
 });  
 
 app.post('/signup', function (req, res) {
@@ -120,6 +120,12 @@ app.post('/signup', function (req, res) {
   .then(function() {
     res.status(201).redirect('/');
   });
+});
+
+app.get('/logout', function (req, res) {
+  req.session.destroy(function() {
+    res.redirect('/login'); 
+  }); 
 });
 
 /************************************************************/
