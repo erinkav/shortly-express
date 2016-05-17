@@ -26,57 +26,42 @@ app.use(session({
   secret: 'random-string'
 }));
 
-var loggedIn = false;
 var sess;
+var checkUser = function(req, res, next) {
+  if (req.session.loggedIn) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+};
 
-app.get('/', 
+app.get('/', checkUser,
 function(req, res) {
-  sess = req.session;
-  console.log('session ', sess);
-  //if not logged in, then redirect
-    if (!sess.loggedIn) {
-      console.log('redirect to login');
-      res.redirect('/login');
-    }
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create', checkUser,
 function(req, res) {
-  //if not logged in, then redirect
-  if (!sess.loggedIn) {
-    res.redirect('/login');
-  }
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links', checkUser,
 function(req, res) {
-  //if not logged in, then redirect
-  if (!sess.loggedIn) {
-    res.redirect('/login');
-  }
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
-app.post('/links', 
+
+app.post('/links', checkUser,
 function(req, res) {
-  // if (!loggedIn) {
-  //   res.redirect('/login');
-  // }
-
   var uri = req.body.url;
-
-  // console.log('req', req);
-  // console.log('res', res);
 
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
-    return res.sendStatus(404);
+    res.status(404);
+    return res.send();
   }
-
   new Link({ url: uri }).fetch().then(function(found) {
     if (found) {
       res.status(200).send(found.attributes);
@@ -105,34 +90,25 @@ function(req, res) {
 /************************************************************/
 
 app.get('/login', function (req, res) {
-  // console.log('App.get Login ', req.body); 
-  // Check in database if user exists
-
-    // if user exists
-      // redirect to homepage
-    // else 
-      // stay on login (and maybe display error message)
-
-
-  res.render('login');
-  loggedIn = true;
-  // res.status(200).send();
+  res.status(200).render('login').send();
 });
 
 app.post('/login', function (req, res) {
-  // console.log('App.post Login ', req.body); 
-  // Pull username and password from req.body
   var username = req.body.username;
   var pw = req.body.password; 
-  console.log(username, pw); 
-  
-  res.render('login');
-  sess.loggedIn = true;
-  // res.status(201).send();
+  sess = req.session;
+  Users.search(username, pw, function(userObject) {
+    if (userObject.length > 0) {
+      sess.loggedIn = true;
+      res.redirect('/');
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 app.get('/signup', function (req, res) {
-
+  res.render('index'); 
 });  
 
 app.post('/signup', function (req, res) {
