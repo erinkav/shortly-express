@@ -33,11 +33,11 @@ app.get('/',
 function(req, res) {
   sess = req.session;
   console.log('session ', sess);
-  sess.loggedIn 
   //if not logged in, then redirect
-  if (!sess.loggedIn) {
-    res.redirect('/login');
-  }
+    if (!sess.loggedIn) {
+      console.log('redirect to login');
+      res.redirect('/login');
+    }
   res.render('index');
 });
 
@@ -63,9 +63,9 @@ function(req, res) {
 
 app.post('/links', 
 function(req, res) {
-  if (!loggedIn) {
-    res.redirect('/login');
-  }
+  // if (!loggedIn) {
+  //   res.redirect('/login');
+  // }
 
   var uri = req.body.url;
 
@@ -106,24 +106,27 @@ function(req, res) {
 
 app.get('/login', function (req, res) {
   // console.log('App.get Login ', req.body); 
-  // Pull username and password from req.body
   // Check in database if user exists
+
     // if user exists
       // redirect to homepage
     // else 
       // stay on login (and maybe display error message)
 
-  console.log('from ', req.url);
 
-  res.render('index');
+  res.render('login');
   loggedIn = true;
   // res.status(200).send();
 });
 
 app.post('/login', function (req, res) {
   // console.log('App.post Login ', req.body); 
+  // Pull username and password from req.body
+  var username = req.body.username;
+  var pw = req.body.password; 
+  console.log(username, pw); 
   
-  res.render('index');
+  res.render('login');
   sess.loggedIn = true;
   // res.status(201).send();
 });
@@ -134,13 +137,11 @@ app.get('/signup', function (req, res) {
 
 app.post('/signup', function (req, res) {
   var user = req.body;
-  console.log(user); 
   Users.create({
     username: user.username,
     password: user.password,
   })
   .then(function() {
-    console.log("User created, in response"); 
     res.status(201).redirect('/');
   });
 });
