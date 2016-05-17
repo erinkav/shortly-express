@@ -12,10 +12,11 @@ var knex = require('knex')({
 var Users = new db.Collection();
 
 Users.search = function(username, password, callback) {
-  return db.knex.select('username', 'password').from('users').where({username:username, password: password})
-    .then(function(userObject) {
-      console.log('userobject', userObject); 
-      callback(userObject); 
+  console.log(username, password); 
+  return db.knex.select('password').from('users').where({username:username})
+    .then(function(pwhash) {
+      console.log('pwhash', pwhash); 
+      callback(pwhash); 
     });
 };
 

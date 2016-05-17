@@ -3,6 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -94,16 +95,24 @@ app.get('/login', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
+  sess = req.session;
   var username = req.body.username;
   var pw = req.body.password; 
-  sess = req.session;
-  Users.search(username, pw, function(userObject) {
-    if (userObject.length > 0) {
-      sess.loggedIn = true;
-      res.redirect('/');
-    } else {
-      res.redirect('/login');
-    }
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(pw, salt);
+  Users.search(username, hash, function(pwhash) {
+    console.log('compare hash');
+
+    bcrypt.compare(pw, pwhash[0].password, function (err, result) {
+      if (err) {
+        throw err;
+      } else if (result === true) {
+        sess.loggedIn = true;
+        res.redirect('/');
+      } else if (result === false) {
+        res.redirect('/login');
+      }
+    });
   });
 });
 
@@ -113,9 +122,13 @@ app.get('/signup', function (req, res) {
 
 app.post('/signup', function (req, res) {
   var user = req.body;
+  // var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(user.password, 10);
+  console.log('username', user.username);
+  console.log('pw hash', hash);
   Users.create({
     username: user.username,
-    password: user.password,
+    password: hash,
   })
   .then(function() {
     res.status(201).redirect('/');
