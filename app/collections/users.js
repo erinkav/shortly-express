@@ -18,6 +18,17 @@ Users.search = function(username, callback) {
     });
 };
 
+Users.findOne = function(username, callback) {
+  console.log(username);
+  return db.knex.select('username', 'password').from('users').where({username: username.username})
+    .then(function(user) {
+      callback(JSON.stringify(user[0])); 
+      console.log('user ', user[0]);
+    });
+};
+
+
+
 Users.model = User;
 
 module.exports = Users;
