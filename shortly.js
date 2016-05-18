@@ -53,17 +53,15 @@ function(req, res) {
   });
 });
 
-
 app.post('/links', checkUser,
 function(req, res) {
   var uri = req.body.url;
-
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     res.status(404);
     return res.send();
   }
-  new Link({ url: uri }).fetch().then(function(found) {
+  new Link({ url: uri }).fetch({withRelated: ['users']}).then(function(found) {
     if (found) {
       res.status(200).send(found.attributes);
     } else {
@@ -72,7 +70,6 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.sendStatus(404);
         }
-
         Links.create({
           url: uri,
           title: title,
@@ -98,11 +95,7 @@ app.post('/login', function (req, res) {
   sess = req.session;
   var username = req.body.username;
   var pw = req.body.password; 
-  var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(pw, salt);
-  Users.search(username, hash, function(pwhash) {
-    console.log('compare hash');
-
+  Users.search(username, function(pwhash) {
     bcrypt.compare(pw, pwhash[0].password, function (err, result) {
       if (err) {
         throw err;
@@ -122,10 +115,8 @@ app.get('/signup', function (req, res) {
 
 app.post('/signup', function (req, res) {
   var user = req.body;
-  // var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(user.password, 10);
-  console.log('username', user.username);
-  console.log('pw hash', hash);
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(user.password, salt);
   Users.create({
     username: user.username,
     password: hash,
@@ -155,7 +146,6 @@ app.get('/*', function(req, res) {
       var click = new Click({
         linkId: link.get('id')
       });
-
       click.save().then(function() {
         link.set('visits', link.get('visits') + 1);
         link.save().then(function() {
